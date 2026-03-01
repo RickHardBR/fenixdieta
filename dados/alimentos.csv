@@ -1,0 +1,75 @@
+nome,tipo_medida,calorias_base,categoria
+Arroz branco cozido,gramas,130,carbo
+Arroz integral cozido,gramas,124,carbo
+Batata cozida,gramas,77,carbo
+Batata doce cozida,gramas,86,carbo
+Macarrão cozido,gramas,131,carbo
+Pão francês,gramas,265,carbo
+Pão integral,gramas,247,carbo
+Aveia,gramas,389,carbo
+Granola,gramas,471,carbo
+Farinha de mandioca,gramas,365,carbo
+Cuscuz,gramas,112,carbo
+Tapioca,gramas,358,carbo
+Milho cozido,gramas,96,carbo
+Feijão carioca cozido,gramas,76,carbo
+Feijão preto cozido,gramas,77,carbo
+Lentilha cozida,gramas,116,carbo
+Grão-de-bico cozido,gramas,164,carbo
+Banana,unidade,90,fruta
+Maçã,unidade,80,fruta
+Pera,unidade,96,fruta
+Laranja,unidade,62,fruta
+Mamão,gramas,43,fruta
+Melancia,gramas,30,fruta
+Abacaxi,gramas,50,fruta
+Morango,gramas,32,fruta
+Uva,gramas,69,fruta
+Abacate,gramas,160,gordura
+Frango peito grelhado,gramas,165,proteina
+Frango coxa sem pele,gramas,177,proteina
+Carne bovina magra,gramas,250,proteina
+Carne moída,gramas,254,proteina
+Peixe tilápia,gramas,129,proteina
+Salmão,gramas,208,proteina
+Atum em água,gramas,116,proteina
+Ovo,unidade,70,proteina
+Clara de ovo,unidade,17,proteina
+Queijo muçarela,gramas,280,laticinio
+Queijo minas,gramas,264,laticinio
+Leite integral,unidade,120,laticinio
+Leite desnatado,unidade,83,laticinio
+Iogurte natural,gramas,61,laticinio
+Iogurte grego,gramas,97,laticinio
+Whey protein,gramas,400,proteina
+Amendoim,gramas,567,gordura
+Castanha de caju,gramas,553,gordura
+Castanha do pará,gramas,656,gordura
+Nozes,gramas,654,gordura
+Chia,gramas,486,gordura
+Linhaça,gramas,534,gordura
+Azeite de oliva,gramas,884,gordura
+Manteiga,gramas,717,gordura
+Requeijão,gramas,257,laticinio
+Bolo simples,gramas,350,carbo
+Chocolate ao leite,gramas,535,carbo
+Chocolate 70%,gramas,600,gordura
+Mel,gramas,304,carbo
+Açúcar,gramas,387,carbo
+Refrigerante,unidade,140,carbo
+Suco de laranja natural,gramas,45,carbo
+Hambúrguer caseiro,gramas,295,proteina
+Linguiça,gramas,301,proteina
+Bacon,gramas,541,gordura
+Tofu,gramas,76,proteina
+Soja cozida,gramas,173,proteina
+Ervilha cozida,gramas,84,carbo
+Brócolis,gramas,34,vegetal
+Cenoura,gramas,41,vegetal
+Tomate,gramas,18,vegetal
+Alface,gramas,15,vegetal
+Pepino,gramas,16,vegetal
+Abobrinha,gramas,17,vegetal
+Berinjela,gramas,25,vegetal
+Couve,gramas,49,vegetal
+Espinafre,gramas,23,vegetal
