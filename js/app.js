@@ -244,7 +244,7 @@ async function atualizarStatus() {
   status.textContent = `Você completou ${feitas} de ${total} refeições hoje.`;
 
   if (feitas === total && total > 0) {
-    status.style.color = "lightgreen";
+    status.style.color = "red";
   } else {
     status.style.color = "orange";
   }
