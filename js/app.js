@@ -352,7 +352,7 @@ async function inicializarRefeicoesPadrao() {
 
     // 2️⃣ Criar itens das refeições com base no plano
 
-    const planoDia = planoSemanal[diaSemana];
+  const planoDia = planoSemanal[semanaAtual][diaSemana];
 
     if (!planoDia) {
       return;
