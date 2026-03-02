@@ -426,4 +426,9 @@ async function calcularTotalDia() {
   document.getElementById("totalDiaCalorias").textContent =
     `Total consumido hoje: ${total.toFixed(0)} kcal`;
 }
+
+function irParaHistoricoRefeicoes() {
+  window.location.href = "refeicoes.html";
+}
+
 window.onload = init;
