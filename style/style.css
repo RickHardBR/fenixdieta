@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 * {
   box-sizing: border-box;
 }
@@ -178,4 +179,186 @@ button:active {
   margin-top: 8px;
   font-weight: bold;
   color: #4caf50;
+=======
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #121212;
+  color: white;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.container {
+  width: 400px;
+}
+
+h1 {
+  text-align: center;
+}
+
+.card {
+  background: #1e1e1e;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+}
+
+.card h2 {
+  justify-content: center;
+  display: flex;
+  gap: 10px;
+  font-size: 18px;
+}
+
+.card p {
+  text-align: center;
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+input,
+button {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: none;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+input {
+  background: #2a2a2a;
+  color: white;
+}
+
+button {
+  background: #4caf50;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.05s ease;
+}
+
+button:hover {
+  background: #43a047;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.refeicao-item {
+  margin-bottom: 16px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.refeicao-item span {
+  line-height: 1.3;
+}
+
+.refeicao-item input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+.refeicao-item:hover {
+  background: #2a2a2a;
+}
+
+.linha-historico {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.linha-historico.header {
+  background: transparent;
+  font-weight: bold;
+  opacity: 0.7;
+  margin-bottom: 15px;
+}
+
+.linha-historico.header span:first-child {
+  text-align: left;
+}
+
+.linha-historico.header span:last-child {
+  text-align: right;
+}
+
+.linha-historico:not(.header) span {
+  background: #2a2a2a;
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+.linha-historico span:first-child {
+  text-align: left;
+}
+
+.linha-historico span:last-child {
+  text-align: right;
+}
+
+/* Peso atual */
+.peso-atual span {
+  background: #3a3a3a;
+  color: white;
+  font-weight: bold;
+}
+
+/* Pesos antigos */
+.peso-antigo span {
+  background: #262626;
+  color: #888;
+}
+.refeicao-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.refeicao-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-icon {
+  font-size: 14px;
+  color: #4caf50;
+  font-weight: bold;
+  width: 16px;
+  text-align: center;
+}
+
+.refeicao-detalhes {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+  padding-left: 24px;
+  font-size: 14px;
+  color: #ccc;
+}
+.item-alimento {
+  margin-bottom: 6px;
+}
+.total-refeicao {
+  margin-top: 8px;
+  font-weight: bold;
+  color: #4caf50;
+>>>>>>> b2e6bb3a11cbca8883fc2dfe866dc18a82e7a83f
 }
