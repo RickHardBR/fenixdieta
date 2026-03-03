@@ -1,4 +1,25 @@
-const semanaAtual = 2;
+const dataInicioPlano = new Date("2026-03-02"); 
+
+function calcularSemanaAtual() {
+  const hoje = new Date();
+
+  // diferença em milissegundos
+  const diff = hoje - dataInicioPlano;
+
+  // converter para dias
+  const diasPassados = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  // converter para semanas
+  const semanasPassadas = Math.floor(diasPassados / 7);
+
+  // semana base começa na 2
+  const semanaCalculada = 2 + semanasPassadas;
+
+  // limitar entre 2 e 4
+  return Math.min(Math.max(semanaCalculada, 2), 4);
+}
+
+const semanaAtual = calcularSemanaAtual();
 
 const planoSemanal = {
 
