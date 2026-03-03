@@ -31,6 +31,9 @@
       <button onclick="irParaHistoricoRefeicoes()">
         Histórico de Refeições
       </button>
+      <button onclick="recriarPlanoDoDia()" style="background:#ff9800;">
+        🔄 Recriar Plano do Dia
+      </button>
     </section>
 
     <section class="card">
@@ -38,9 +41,7 @@
       <p id="status"></p>
       <p id="totalDiaCalorias">Total consumido hoje: 0 kcal</p>
     </section>
-    <button onclick="recriarPlanoDoDia()" style="background:#ff9800;">
-      🔄 Recriar Plano do Dia
-    </button>
+
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./js/supabase.js"></script>
