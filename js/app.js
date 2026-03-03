@@ -134,15 +134,15 @@ async function gerarRefeicoes() {
     checkbox.type = "checkbox";
     checkbox.checked = refeicao.concluida;
 
-checkbox.onchange = async () => {
-  await supabaseClient
-    .from("refeicoes")
-    .update({ concluida: checkbox.checked })
-    .eq("id", refeicao.id);
+    checkbox.onchange = async () => {
+      await supabaseClient
+        .from("refeicoes")
+        .update({ concluida: checkbox.checked })
+        .eq("id", refeicao.id);
 
-  await atualizarStatus();
-  await calcularTotalDia();
-};
+      await atualizarStatus();
+      await calcularTotalDia();
+    };
 
     header.appendChild(leftSide);
     header.appendChild(checkbox);
@@ -162,11 +162,11 @@ checkbox.onchange = async () => {
       const base = alimento.tipo_medida === "gramas" ? 100 : 1;
       const caloriasItem = (item.quantidade * alimento.calorias_base) / base;
 
-     totalCalorias += caloriasItem;
+      totalCalorias += caloriasItem;
 
-    if (refeicao.concluida) {
-    totalDiaCalorias += caloriasItem;
-};
+      if (refeicao.concluida) {
+        totalDiaCalorias += caloriasItem;
+      }
 
       const linha = document.createElement("div");
       linha.className = "item-alimento";
@@ -204,11 +204,11 @@ checkbox.onchange = async () => {
     div.appendChild(detalhes);
     container.appendChild(div);
     // 🔥 Atualizar total do dia
-const totalDiaElemento = document.getElementById("totalDiaCalorias");
+    const totalDiaElemento = document.getElementById("totalDiaCalorias");
 
-if (totalDiaElemento) {
-  totalDiaElemento.textContent = `Total consumido hoje: ${totalDiaCalorias.toFixed(0)} kcal`;
-}
+    if (totalDiaElemento) {
+      totalDiaElemento.textContent = `Total consumido hoje: ${totalDiaCalorias.toFixed(0)} kcal`;
+    }
   });
 }
 function mostrarDataAtual() {
@@ -352,7 +352,7 @@ async function inicializarRefeicoesPadrao() {
 
     // 2️⃣ Criar itens das refeições com base no plano
 
-  const planoDia = planoSemanal[semanaAtual][diaSemana];
+    const planoDia = planoSemanal[semanaAtual][diaSemana];
 
     if (!planoDia) {
       return;
@@ -393,9 +393,7 @@ async function calcularTotalDia() {
     .select("id, concluida")
     .eq("data", hoje);
 
-  const idsConcluidas = refeicoes
-    .filter(r => r.concluida)
-    .map(r => r.id);
+  const idsConcluidas = refeicoes.filter((r) => r.concluida).map((r) => r.id);
 
   if (!idsConcluidas.length) {
     document.getElementById("totalDiaCalorias").textContent =
@@ -405,19 +403,21 @@ async function calcularTotalDia() {
 
   const { data: itens } = await supabaseClient
     .from("refeicao_itens")
-    .select(`
+    .select(
+      `
       quantidade,
       refeicao_id,
       alimentos!inner (
         tipo_medida,
         calorias_base
       )
-    `)
+    `,
+    )
     .in("refeicao_id", idsConcluidas);
 
   let total = 0;
 
-  itens.forEach(item => {
+  itens.forEach((item) => {
     const alimento = item.alimentos;
     const base = alimento.tipo_medida === "gramas" ? 100 : 1;
     total += (item.quantidade * alimento.calorias_base) / base;
@@ -429,6 +429,38 @@ async function calcularTotalDia() {
 
 function irParaHistoricoRefeicoes() {
   window.location.href = "refeicoes.html";
+}
+
+async function recriarPlanoDoDia() {
+  const confirmar = confirm(
+    "Isso vai apagar e recriar as refeições de hoje. Continuar?",
+  );
+  if (!confirmar) return;
+
+  const hoje = new Date().toISOString().split("T")[0];
+
+  // 1️⃣ Buscar refeições do dia
+  const { data: refeicoesHoje } = await supabaseClient
+    .from("refeicoes")
+    .select("id")
+    .eq("data", hoje);
+
+  if (refeicoesHoje && refeicoesHoje.length > 0) {
+    const ids = refeicoesHoje.map((r) => r.id);
+
+    // 2️⃣ Apagar itens primeiro (foreign key)
+    await supabaseClient.from("refeicao_itens").delete().in("refeicao_id", ids);
+
+    // 3️⃣ Apagar refeições
+    await supabaseClient.from("refeicoes").delete().eq("data", hoje);
+  }
+
+  // 4️⃣ Recriar
+  await inicializarRefeicoesPadrao();
+  await gerarRefeicoes();
+  await atualizarStatus();
+
+  alert("Plano recriado com sucesso 🚀");
 }
 
 window.onload = init;
