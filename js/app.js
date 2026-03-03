@@ -52,7 +52,7 @@ async function gerarRefeicoes() {
   const container = document.getElementById("refeicoes");
   container.innerHTML = "";
 
-  const hoje = new Date().toISOString().split("T")[0];
+  const hoje = new Date().toLocaleDateString("sv-SE");
 
   // 1️⃣ Buscar refeições do dia
   const { data: refeicoes, error } = await supabaseClient
@@ -225,7 +225,7 @@ function atualizarTituloRefeicoes() {
 }
 
 async function atualizarStatus() {
-  const hoje = new Date().toISOString().split("T")[0];
+  const hoje = new Date().toLocaleDateString("sv-SE");
 
   const { data, error } = await supabaseClient
     .from("refeicoes")
@@ -318,7 +318,7 @@ function irParaHistorico() {
 }
 
 async function inicializarRefeicoesPadrao() {
-  const hoje = new Date().toISOString().split("T")[0];
+  const hoje = new Date().toLocaleDateString("sv-SE");
   const diaSemana = obterDiaSemana();
 
   const { data, error } = await supabaseClient
@@ -386,7 +386,7 @@ async function inicializarRefeicoesPadrao() {
   }
 }
 async function calcularTotalDia() {
-  const hoje = new Date().toISOString().split("T")[0];
+  const hoje = new Date().toLocaleDateString("sv-SE");
 
   const { data: refeicoes } = await supabaseClient
     .from("refeicoes")
@@ -437,7 +437,7 @@ async function recriarPlanoDoDia() {
   );
   if (!confirmar) return;
 
-  const hoje = new Date().toISOString().split("T")[0];
+  const hoje = new Date().toLocaleDateString("sv-SE");
 
   // 1️⃣ Buscar refeições do dia
   const { data: refeicoesHoje } = await supabaseClient
@@ -461,6 +461,8 @@ async function recriarPlanoDoDia() {
   await atualizarStatus();
 
   alert("Plano recriado com sucesso 🚀");
+  console.log("Semana atual:", semanaAtual);
+console.log("Dia da semana:", obterDiaSemana());
 }
 
 window.onload = init;
