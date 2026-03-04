@@ -1,3 +1,4 @@
+const metaCalorias = 2000;
 let navegando = false;
 let dataVisualizada = null;
 const refeicoesPadrao = [
@@ -453,11 +454,19 @@ async function calcularTotalDia() {
 
   const idsConcluidas = refeicoes.filter((r) => r.concluida).map((r) => r.id);
 
-  if (!idsConcluidas.length) {
-    document.getElementById("totalDiaCalorias").textContent =
-      "Total consumido hoje: 0 kcal";
-    return;
-  }
+if (!idsConcluidas.length) {
+  document.getElementById("caloriasNumero").textContent = "0";
+
+  const circulo = document.querySelector(".calorias-circulo");
+  circulo.style.background = `
+    conic-gradient(
+      #4caf50 0deg,
+      #2a2a2a 0deg
+    )
+  `;
+
+  return;
+}
 
   const { data: itens } = await supabaseClient
     .from("refeicao_itens")
@@ -481,8 +490,23 @@ async function calcularTotalDia() {
     total += (item.quantidade * alimento.calorias_base) / base;
   });
 
-  document.getElementById("totalDiaCalorias").textContent =
-    `Total consumido hoje: ${total.toFixed(0)} kcal`;
+ const totalElemento = document.getElementById("totalDiaCalorias");
+
+if (totalElemento) {
+  totalElemento.textContent = `Total consumido hoje: ${total.toFixed(0)} kcal`;
+}
+    document.getElementById("caloriasNumero").textContent = total.toFixed(0);
+    const progresso = Math.min(total / metaCalorias, 1);
+const graus = progresso * 360;
+
+const circulo = document.querySelector(".calorias-circulo");
+
+circulo.style.background = `
+  conic-gradient(
+    #4caf50 ${graus}deg,
+    #2a2a2a ${graus}deg
+  )
+`;
 }
 
 function irParaHistoricoRefeicoes() {
@@ -555,15 +579,14 @@ async function atualizarTela() {
 
   container.classList.add("fade-out");
 
-  setTimeout(async () => {
-    await atualizarTituloRefeicoes();
-    await gerarRefeicoes();
-    await atualizarStatus();
-    await calcularTotalDia();
+  await new Promise(resolve => setTimeout(resolve, 200));
 
-    container.classList.remove("fade-out");
-  }, 200);
-  
+  await atualizarTituloRefeicoes();
+  await gerarRefeicoes();
+  await atualizarStatus();
+  await calcularTotalDia();
+
+  container.classList.remove("fade-out");
 }
 async function garantirPlanoDoDia(data) {
   const { data: refeicoes } = await supabaseClient

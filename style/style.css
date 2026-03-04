@@ -1,34 +1,51 @@
+/* =========================
+   RESET / BASE
+========================= */
+
 * {
   box-sizing: border-box;
 }
 
 body {
-  font-family: Arial, sans-serif;
-  background: #121212;
-  color: white;
+  background: linear-gradient(135deg, #1fbf8f, #0f6d7a);
+  min-height: 100vh;
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
   display: flex;
   justify-content: center;
-  padding: 20px;
-}
-
-.container {
-  width: 400px;
+  color: white;
 }
 
 h1 {
   text-align: center;
+  margin-bottom: 20px;
 }
 
+/* =========================
+   LAYOUT PRINCIPAL
+========================= */
+
+.container {
+  width: 100%;
+  max-width: 420px;
+  margin: 20px;
+}
+
+/* =========================
+   CARDS
+========================= */
+
 .card {
-  background: #1e1e1e;
+  background: #222;
   padding: 20px;
   margin-bottom: 20px;
-  border-radius: 10px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
 .card h2 {
-  justify-content: center;
   display: flex;
+  justify-content: center;
   gap: 10px;
   font-size: 18px;
 }
@@ -39,6 +56,10 @@ h1 {
   margin-top: 20px;
 }
 
+/* =========================
+   INPUTS E BOTÕES
+========================= */
+
 input,
 button {
   width: 100%;
@@ -47,7 +68,6 @@ button {
   border-radius: 8px;
   border: none;
   font-size: 15px;
-  box-sizing: border-box;
 }
 
 input {
@@ -60,9 +80,7 @@ button {
   color: white;
   font-weight: bold;
   cursor: pointer;
-  transition:
-    background 0.2s ease,
-    transform 0.05s ease;
+  transition: background 0.2s ease, transform 0.05s ease;
 }
 
 button:hover {
@@ -73,25 +91,24 @@ button:active {
   transform: scale(0.98);
 }
 
-.refeicao-item {
-  margin-bottom: 16px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  transition: background 0.2s ease;
+/* Botões especiais */
+
+button.btn-recriar-plano {
+  background: #ff9800;
+  margin-top: 10px;
 }
 
-.refeicao-item span {
-  line-height: 1.3;
+button:hover.btn-recriar-plano {
+  background: #f22207;
 }
 
-.refeicao-item input {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
+button:hover.btn-encerrar-dia {
+  background: #0765f2;
 }
-.refeicao-item:hover {
-  background: #2a2a2a;
-}
+
+/* =========================
+   HISTÓRICO DE PESO
+========================= */
 
 .linha-historico {
   display: grid;
@@ -102,7 +119,6 @@ button:active {
 }
 
 .linha-historico.header {
-  background: transparent;
   font-weight: bold;
   opacity: 0.7;
   margin-bottom: 15px;
@@ -132,6 +148,7 @@ button:active {
 }
 
 /* Peso atual */
+
 .peso-atual span {
   background: #3a3a3a;
   color: white;
@@ -139,16 +156,15 @@ button:active {
 }
 
 /* Pesos antigos */
+
 .peso-antigo span {
   background: #262626;
   color: #888;
 }
 
-.refeicao-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+/* =========================
+   NAVEGAÇÃO DE DIAS
+========================= */
 
 .navegacao-dia {
   display: grid;
@@ -180,25 +196,16 @@ button:active {
 
 .navegacao_dias:hover {
   transform: scale(1.15);
-  background: transparent;
-}
-#refeicoes {
-  transition: opacity 0.25s ease;
 }
 
-.fade-out {
-  opacity: 0;
-}
+/* Botão voltar hoje */
 
 .btn-voltar-hoje {
   display: block;
   width: 45%;
-  margin: -20px auto 15px auto; /* centraliza e controla distância */
-  background-color: #4CAF50;
-  border: none;
+  margin: -20px auto 15px auto;
   padding: 8px 4px;
   border-radius: 8px;
-  cursor: pointer;
   font-weight: 600;
   font-size: 14px;
   transition: transform 0.2s ease;
@@ -207,13 +214,46 @@ button:active {
 .btn-voltar-hoje:hover {
   transform: scale(1.05);
 }
-.btn-voltar-hoje:hover {
-  transform: scale(1.05);
+
+/* =========================
+   REFEIÇÕES
+========================= */
+
+#refeicoes {
+  transition: opacity 0.25s ease;
 }
+
+.fade-out {
+  opacity: 0;
+}
+
+.refeicao-item {
+  background: linear-gradient(180deg, #2a2a2a, #242424);
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.refeicao-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.refeicao-header input {
+  width: 18px;
+  height: 18px;
+}
+
 .refeicao-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+}
+
+.refeicao-nome {
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .toggle-icon {
@@ -232,31 +272,112 @@ button:active {
   font-size: 14px;
   color: #ccc;
 }
+
 .item-alimento {
   margin-bottom: 6px;
 }
+
 .total-refeicao {
   margin-top: 8px;
   font-weight: bold;
   color: #4caf50;
 }
 
-button.btn-recriar-plano {
-  background: #ff9800;
-  margin-top: 10px;
+/* =========================
+   WIDGET CALORIAS
+========================= */
+
+.calorias-widget {
+  display: flex;
+  justify-content: center;
+  margin: 15px 0 20px 0;
 }
 
-button:hover.btn-recriar-plano {
-  background: #f22207;
+.calorias-circulo {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+
+  background: conic-gradient(
+    #4caf50 0deg,
+    #4caf50 0deg,
+    #2a2a2a 0deg,
+    #2a2a2a 360deg
+  );
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  font-weight: bold;
+  color: white;
+  position: relative;
 }
-button:hover.btn-encerrar-dia {
-  background: #0765f2;
+
+/* centro do círculo */
+
+.calorias-circulo::after {
+  content: "";
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  background: #222;
+  border-radius: 50%;
 }
+
+.calorias-circulo span,
+.calorias-circulo small {
+  position: relative;
+  z-index: 2;
+}
+
+.calorias-circulo span {
+  font-size: 32px;
+}
+
+.calorias-circulo small {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.calorias-circulo span {
+  font-size: 28px;
+}
+
+.calorias-circulo small {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
 
 @media (max-width: 480px) {
+
+  .navegacao-dia h2 {
+    font-size: 16px;
+  }
+
   .btn-voltar-hoje {
     width: 45%;
     padding: 6px 10px;
     font-size: 13px;
   }
+
+}
+
+/* =========================
+   Histórico de peso - gráfico
+========================= */ 
+#graficoPeso {
+  margin: 20px 0;
+}
+
+#resumoPeso {
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 10px;
+  font-size: 15px;
 }
