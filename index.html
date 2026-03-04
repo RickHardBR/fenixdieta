@@ -27,10 +27,14 @@
     </section>
     <section class="card">
       <div class="navegacao-dia">
-        <button onclick="alterarDia(-1)" class="navegacao_dias">⬅️</button>
-          <h2 id="tituloRefeicoes"></h2>
-        <button onclick="alterarDia(1)" class="navegacao_dias">➡️</button>
-      </div>
+  <button onclick="alterarDia(-1)" class="navegacao_dias">⬅️</button>
+  <h2 id="tituloRefeicoes"></h2>
+  <button onclick="alterarDia(1)" class="navegacao_dias">➡️</button>
+</div>
+
+<button onclick="voltarParaHoje()" class="btn-voltar-hoje">
+  🔄 Dia atual
+</button>
 
       <div id="refeicoes"></div>
       <button onclick="irParaHistoricoRefeicoes()">

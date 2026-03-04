@@ -182,7 +182,34 @@ button:active {
   transform: scale(1.15);
   background: transparent;
 }
+#refeicoes {
+  transition: opacity 0.25s ease;
+}
 
+.fade-out {
+  opacity: 0;
+}
+
+.btn-voltar-hoje {
+  display: block;
+  width: 45%;
+  margin: -20px auto 15px auto; /* centraliza e controla distância */
+  background-color: #4CAF50;
+  border: none;
+  padding: 8px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+
+.btn-voltar-hoje:hover {
+  transform: scale(1.05);
+}
+.btn-voltar-hoje:hover {
+  transform: scale(1.05);
+}
 .refeicao-left {
   display: flex;
   align-items: center;
@@ -224,4 +251,12 @@ button:hover.btn-recriar-plano {
 }
 button:hover.btn-encerrar-dia {
   background: #0765f2;
+}
+
+@media (max-width: 480px) {
+  .btn-voltar-hoje {
+    width: 45%;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
 }

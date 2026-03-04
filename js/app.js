@@ -1,3 +1,4 @@
+let navegando = false;
 let dataVisualizada = null;
 const refeicoesPadrao = [
   { key: "cafe", label: "Café da Manhã" },
@@ -7,13 +8,14 @@ const refeicoesPadrao = [
   { key: "pos", label: "Pós-trabalho" },
 ];
 async function init() {
+  dataVisualizada = await obterDataAtiva();
+
   await atualizarTituloRefeicoes();
   await carregarUltimoPeso();
   await inicializarRefeicoesPadrao();
   await gerarRefeicoes();
   await atualizarStatus();
   await carregarHistoricoPeso();
-  dataVisualizada = await obterDataAtiva();
 }
 
 async function obterDataAtiva() {
@@ -520,28 +522,131 @@ async function encerrarDia() {
   await calcularTotalDia();
 }
 
-function alterarDia(direcao) {
-  if (!dataVisualizada) return;
+async function alterarDia(direcao) {
+  if (navegando) return;
 
-  const partes = dataVisualizada.split("-");
+  navegando = true;
+
+  try {
+    const partes = dataVisualizada.split("-");
+    const dataObj = new Date(
+      Number(partes[0]),
+      Number(partes[1]) - 1,
+      Number(partes[2])
+    );
+
+    dataObj.setDate(dataObj.getDate() + direcao);
+
+    const novaData = dataObj.toLocaleDateString("sv-SE");
+
+    dataVisualizada = novaData;
+
+    await garantirPlanoDoDia(novaData);
+    await atualizarTela();
+    await atualizarIndicadorDia();
+
+  } finally {
+    navegando = false;
+  }
+}
+
+async function atualizarTela() {
+  const container = document.getElementById("refeicoes");
+
+  container.classList.add("fade-out");
+
+  setTimeout(async () => {
+    await atualizarTituloRefeicoes();
+    await gerarRefeicoes();
+    await atualizarStatus();
+    await calcularTotalDia();
+
+    container.classList.remove("fade-out");
+  }, 200);
+  
+}
+async function garantirPlanoDoDia(data) {
+  const { data: refeicoes } = await supabaseClient
+    .from("refeicoes")
+    .select("id")
+    .eq("data", data);
+
+  if (refeicoes && refeicoes.length >= refeicoesPadrao.length) return;
+
+  // Criar plano se não existir
+  const diaSemana = await obterDiaSemanaPorData(data);
+
+  const registros = refeicoesPadrao.map((item) => ({
+    nome: item.label,
+    tipo_refeicao: item.key,
+    concluida: false,
+    data: data,
+  }));
+
+  const { data: refeicoesCriadas } = await supabaseClient
+    .from("refeicoes")
+    .insert(registros)
+    .select();
+
+  const planoDia = planoSemanal[semanaAtual][diaSemana];
+  if (!planoDia) return;
+
+  for (const refeicao of refeicoesCriadas) {
+    const itensPlano = planoDia[refeicao.tipo_refeicao];
+    if (!itensPlano) continue;
+
+    for (const itemPlano of itensPlano) {
+      const { data: alimento } = await supabaseClient
+        .from("alimentos")
+        .select("id")
+        .eq("nome", itemPlano.nome)
+        .maybeSingle();
+
+      if (!alimento) continue;
+
+      await supabaseClient.from("refeicao_itens").insert({
+        refeicao_id: refeicao.id,
+        alimento_id: alimento.id,
+        quantidade: itemPlano.quantidade,
+      });
+    }
+  }
+}
+async function atualizarIndicadorDia() {
+  const dataAtiva = await obterDataAtiva();
+  const titulo = document.getElementById("tituloRefeicoes");
+
+  if (dataVisualizada !== dataAtiva) {
+    titulo.style.color = "#888";
+  } else {
+    titulo.style.color = "";
+  }
+}
+async function voltarParaHoje() {
+  dataVisualizada = await obterDataAtiva();
+  await atualizarTela();
+  atualizarIndicadorDia();
+}
+
+function obterDiaSemanaPorData(dataStr) {
+  const partes = dataStr.split("-");
   const dataObj = new Date(
     Number(partes[0]),
     Number(partes[1]) - 1,
     Number(partes[2])
   );
 
-  dataObj.setDate(dataObj.getDate() + direcao);
+  const dias = [
+    "domingo",
+    "segunda",
+    "terca",
+    "quarta",
+    "quinta",
+    "sexta",
+    "sabado",
+  ];
 
-  dataVisualizada = dataObj.toLocaleDateString("sv-SE");
-
-  atualizarTela();
-}
-
-async function atualizarTela() {
-  await atualizarTituloRefeicoes();
-  await gerarRefeicoes();
-  await atualizarStatus();
-  await calcularTotalDia();
+  return dias[dataObj.getDay()];
 }
 
 window.onload = init;
