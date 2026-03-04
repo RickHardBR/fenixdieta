@@ -287,67 +287,69 @@ button:hover.btn-encerrar-dia {
    WIDGET CALORIAS
 ========================= */
 
-.calorias-widget {
-  display: flex;
-  justify-content: center;
-  margin: 15px 0 20px 0;
+.calorias-widget{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin:25px 0;
 }
 
-.calorias-circulo {
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
+.calorias-circulo{
 
-  background: conic-gradient(
-    #4caf50 0deg,
-    #4caf50 0deg,
-    #2a2a2a 0deg,
-    #2a2a2a 360deg
-  );
+  width:170px;
+  height:170px;
+  border-radius:50%;
 
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  background:
+  conic-gradient(#4caf50 0deg,#2a2a2a 0deg);
 
-  font-weight: bold;
-  color: white;
-  position: relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  position:relative;
+
+  box-shadow:
+  0 0 20px rgba(0,0,0,0.4),
+  inset 0 0 15px rgba(0,0,0,0.6);
+
+  transition:background 0.6s ease;
 }
 
-/* centro do círculo */
+.calorias-circulo::before{
 
-.calorias-circulo::after {
-  content: "";
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  background: #222;
-  border-radius: 50%;
+  content:"";
+  position:absolute;
+
+  width:125px;
+  height:125px;
+
+  background:#1f1f1f;
+  border-radius:50%;
+
+  box-shadow:
+  inset 0 0 8px rgba(0,0,0,0.7);
 }
 
-.calorias-circulo span,
-.calorias-circulo small {
-  position: relative;
-  z-index: 2;
+.calorias-centro{
+  position:absolute;
+  text-align:center;
 }
 
-.calorias-circulo span {
-  font-size: 32px;
+.calorias-centro span{
+  font-size:34px;
+  font-weight:700;
 }
 
-.calorias-circulo small {
-  font-size: 14px;
-  opacity: 0.7;
+.calorias-centro small{
+  font-size:13px;
+  opacity:0.7;
 }
 
-.calorias-circulo span {
-  font-size: 28px;
-}
-
-.calorias-circulo small {
-  font-size: 14px;
-  opacity: 0.7;
+.calorias-info{
+  margin-top:10px;
+  font-size:14px;
+  opacity:0.8;
 }
 
 /* =========================

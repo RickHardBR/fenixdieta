@@ -1,4 +1,4 @@
-const metaCalorias = 2000;
+const metaCalorias = 1900;
 let navegando = false;
 let dataVisualizada = null;
 const refeicoesPadrao = [
@@ -496,16 +496,16 @@ if (totalElemento) {
   totalElemento.textContent = `Total consumido hoje: ${total.toFixed(0)} kcal`;
 }
     document.getElementById("caloriasNumero").textContent = total.toFixed(0);
-    const progresso = Math.min(total / metaCalorias, 1);
+const progresso = Math.min(total / metaCalorias, 1);
 const graus = progresso * 360;
 
 const circulo = document.querySelector(".calorias-circulo");
 
 circulo.style.background = `
-  conic-gradient(
-    #4caf50 ${graus}deg,
-    #2a2a2a ${graus}deg
-  )
+conic-gradient(
+#4caf50 ${graus}deg,
+#2a2a2a ${graus}deg
+)
 `;
 }
 
