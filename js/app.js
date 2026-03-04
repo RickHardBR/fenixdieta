@@ -6,13 +6,45 @@ const refeicoesPadrao = [
   { key: "pos", label: "Pós-trabalho" },
 ];
 async function init() {
-  atualizarTituloRefeicoes();
+  await atualizarTituloRefeicoes();
   await carregarUltimoPeso();
   await inicializarRefeicoesPadrao();
   await gerarRefeicoes();
   await atualizarStatus();
   await carregarHistoricoPeso();
-  const diaHoje = obterDiaSemana();
+}
+
+async function obterDataAtiva() {
+  const { data, error } = await supabaseClient
+    .from("controle_dieta")
+    .select("*")
+    .eq("encerrado", false)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error) {
+    console.error("Erro ao buscar dia ativo:", error);
+    throw error;
+  }
+
+  // Se não existir nenhum registro ainda
+  if (!data) {
+    const hoje = new Date().toLocaleDateString("sv-SE");
+
+    const { data: novoRegistro } = await supabaseClient
+      .from("controle_dieta")
+      .insert({
+        data_ativa: hoje,
+        encerrado: false,
+      })
+      .select()
+      .single();
+
+    return novoRegistro.data_ativa;
+  }
+
+  return data.data_ativa;
 }
 
 async function salvarPeso() {
@@ -34,7 +66,16 @@ async function salvarPeso() {
     alert("Peso salvo no banco!");
   }
 }
-function obterDiaSemana() {
+async function obterDiaSemana() {
+  const hoje = await obterDataAtiva();
+
+  const partes = hoje.split("-");
+  const dataObj = new Date(
+    Number(partes[0]),
+    Number(partes[1]) - 1,
+    Number(partes[2])
+  );
+
   const dias = [
     "domingo",
     "segunda",
@@ -45,14 +86,13 @@ function obterDiaSemana() {
     "sabado",
   ];
 
-  const hoje = new Date();
-  return dias[hoje.getDay()];
+  return dias[dataObj.getDay()];
 }
 async function gerarRefeicoes() {
   const container = document.getElementById("refeicoes");
   container.innerHTML = "";
 
-  const hoje = new Date().toLocaleDateString("sv-SE");
+  const hoje = await obterDataAtiva();
 
   // 1️⃣ Buscar refeições do dia
   const { data: refeicoes, error } = await supabaseClient
@@ -79,6 +119,7 @@ async function gerarRefeicoes() {
   // 2️⃣ Buscar todos os itens dessas refeições
   const { data: itens, error: erroItens } = await supabaseClient
     .from("refeicao_itens")
+    
     .select(
       `
     id,
@@ -98,7 +139,7 @@ async function gerarRefeicoes() {
   // 3️⃣ Agrupar itens por refeição
   const itensPorRefeicao = {};
   let totalDiaCalorias = 0;
-  itens.forEach((item) => {
+  (itens || []).forEach((item) => {
     if (!itensPorRefeicao[item.refeicao_id]) {
       itensPorRefeicao[item.refeicao_id] = [];
     }
@@ -217,15 +258,24 @@ function mostrarDataAtual() {
   document.getElementById("dataAtual").textContent = `Hoje é ${formatada}`;
 }
 
-function atualizarTituloRefeicoes() {
-  const hoje = new Date();
-  const formatada = hoje.toLocaleDateString("pt-BR");
+async function atualizarTituloRefeicoes() {
+  const hoje = await obterDataAtiva();
+
+  const partes = hoje.split("-");
+  const dataObj = new Date(
+    Number(partes[0]),
+    Number(partes[1]) - 1,
+    Number(partes[2])
+  );
+
+  const formatada = dataObj.toLocaleDateString("pt-BR");
+
   document.getElementById("tituloRefeicoes").textContent =
     `Refeições do dia ${formatada}`;
 }
 
 async function atualizarStatus() {
-  const hoje = new Date().toLocaleDateString("sv-SE");
+  const hoje = await obterDataAtiva();
 
   const { data, error } = await supabaseClient
     .from("refeicoes")
@@ -318,8 +368,8 @@ function irParaHistorico() {
 }
 
 async function inicializarRefeicoesPadrao() {
-  const hoje = new Date().toLocaleDateString("sv-SE");
-  const diaSemana = obterDiaSemana();
+  const hoje = await obterDataAtiva();
+  const diaSemana = await obterDiaSemana();
 
   const { data, error } = await supabaseClient
     .from("refeicoes")
@@ -353,7 +403,7 @@ async function inicializarRefeicoesPadrao() {
     // 2️⃣ Criar itens das refeições com base no plano
 
     const planoDia = planoSemanal[semanaAtual][diaSemana];
-
+  
     if (!planoDia) {
       return;
     }
@@ -364,7 +414,6 @@ async function inicializarRefeicoesPadrao() {
       if (!itensPlano) continue;
 
       for (const itemPlano of itensPlano) {
-        console.log("Procurando alimento:", itemPlano.nome);
 
         const { data: alimento } = await supabaseClient
           .from("alimentos")
@@ -386,7 +435,7 @@ async function inicializarRefeicoesPadrao() {
   }
 }
 async function calcularTotalDia() {
-  const hoje = new Date().toLocaleDateString("sv-SE");
+  const hoje = await obterDataAtiva();
 
   const { data: refeicoes } = await supabaseClient
     .from("refeicoes")
@@ -417,7 +466,7 @@ async function calcularTotalDia() {
 
   let total = 0;
 
-  itens.forEach((item) => {
+  (itens || []).forEach((item) => {
     const alimento = item.alimentos;
     const base = alimento.tipo_medida === "gramas" ? 100 : 1;
     total += (item.quantidade * alimento.calorias_base) / base;
@@ -431,38 +480,37 @@ function irParaHistoricoRefeicoes() {
   window.location.href = "refeicoes.html";
 }
 
-async function recriarPlanoDoDia() {
-  const confirmar = confirm(
-    "Isso vai apagar e recriar as refeições de hoje. Continuar?",
-  );
+async function encerrarDia() {
+  const confirmar = confirm("Deseja encerrar o dia atual?");
   if (!confirmar) return;
 
-  const hoje = new Date().toLocaleDateString("sv-SE");
+  const hoje = await obterDataAtiva();
 
-  // 1️⃣ Buscar refeições do dia
-  const { data: refeicoesHoje } = await supabaseClient
-    .from("refeicoes")
-    .select("id")
-    .eq("data", hoje);
+  // 1️⃣ Marcar o dia atual como encerrado
+  await supabaseClient
+    .from("controle_dieta")
+    .update({ encerrado: true })
+    .eq("data_ativa", hoje);
 
-  if (refeicoesHoje && refeicoesHoje.length > 0) {
-    const ids = refeicoesHoje.map((r) => r.id);
+  // 2️⃣ Calcular próximo dia
+  const dataObj = new Date(hoje);
+  dataObj.setDate(dataObj.getDate() + 1);
 
-    // 2️⃣ Apagar itens primeiro (foreign key)
-    await supabaseClient.from("refeicao_itens").delete().in("refeicao_id", ids);
+  const proximoDia = dataObj.toLocaleDateString("sv-SE");
 
-    // 3️⃣ Apagar refeições
-    await supabaseClient.from("refeicoes").delete().eq("data", hoje);
-  }
+  // 3️⃣ Criar novo registro ativo
+  await supabaseClient.from("controle_dieta").insert({
+    data_ativa: proximoDia,
+    encerrado: false,
+  });
 
-  // 4️⃣ Recriar
+  alert("Dia encerrado. Novo dia iniciado.");
+
+  // 4️⃣ Recarregar sistema
   await inicializarRefeicoesPadrao();
   await gerarRefeicoes();
   await atualizarStatus();
-
-  alert("Plano recriado com sucesso 🚀");
-  console.log("Semana atual:", semanaAtual);
-console.log("Dia da semana:", obterDiaSemana());
+  await calcularTotalDia();
 }
 
 window.onload = init;

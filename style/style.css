@@ -179,3 +179,15 @@ button:active {
   font-weight: bold;
   color: #4caf50;
 }
+
+button.btn-recriar-plano {
+  background: #ff9800;
+  margin-top: 10px;
+}
+
+button:hover.btn-recriar-plano {
+  background: #f22207;
+}
+button:hover.btn-encerrar-dia {
+  background: #0765f2;
+}
