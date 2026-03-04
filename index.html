@@ -26,7 +26,12 @@
       <button onclick="irParaHistorico()">Ver histórico completo</button>
     </section>
     <section class="card">
-      <h2 id="tituloRefeicoes"></h2>
+      <div class="navegacao-dia">
+        <button onclick="alterarDia(-1)" class="navegacao_dias">⬅️</button>
+          <h2 id="tituloRefeicoes"></h2>
+        <button onclick="alterarDia(1)" class="navegacao_dias">➡️</button>
+      </div>
+
       <div id="refeicoes"></div>
       <button onclick="irParaHistoricoRefeicoes()">
         Histórico de Refeições

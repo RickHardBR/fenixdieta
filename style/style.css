@@ -143,10 +143,44 @@ button:active {
   background: #262626;
   color: #888;
 }
+
 .refeicao-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.navegacao-dia {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.navegacao-dia h2 {
+  text-align: center;
+  margin: 0;
+}
+
+.navegacao_dias {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.navegacao_dias:first-child {
+  justify-self: start;
+}
+
+.navegacao_dias:last-child {
+  justify-self: end;
+}
+
+.navegacao_dias:hover {
+  transform: scale(1.15);
+  background: transparent;
 }
 
 .refeicao-left {

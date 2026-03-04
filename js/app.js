@@ -1,3 +1,4 @@
+let dataVisualizada = null;
 const refeicoesPadrao = [
   { key: "cafe", label: "Café da Manhã" },
   { key: "almoco", label: "Almoço" },
@@ -12,6 +13,7 @@ async function init() {
   await gerarRefeicoes();
   await atualizarStatus();
   await carregarHistoricoPeso();
+  dataVisualizada = await obterDataAtiva();
 }
 
 async function obterDataAtiva() {
@@ -67,7 +69,7 @@ async function salvarPeso() {
   }
 }
 async function obterDiaSemana() {
-  const hoje = await obterDataAtiva();
+  const hoje = await obterDataEmUso();
 
   const partes = hoje.split("-");
   const dataObj = new Date(
@@ -92,7 +94,7 @@ async function gerarRefeicoes() {
   const container = document.getElementById("refeicoes");
   container.innerHTML = "";
 
-  const hoje = await obterDataAtiva();
+  const hoje = await obterDataEmUso();
 
   // 1️⃣ Buscar refeições do dia
   const { data: refeicoes, error } = await supabaseClient
@@ -258,8 +260,13 @@ function mostrarDataAtual() {
   document.getElementById("dataAtual").textContent = `Hoje é ${formatada}`;
 }
 
+async function obterDataEmUso() {
+  if (dataVisualizada) return dataVisualizada;
+  return await obterDataAtiva();
+}
+
 async function atualizarTituloRefeicoes() {
-  const hoje = await obterDataAtiva();
+  const hoje = await obterDataEmUso();
 
   const partes = hoje.split("-");
   const dataObj = new Date(
@@ -275,7 +282,7 @@ async function atualizarTituloRefeicoes() {
 }
 
 async function atualizarStatus() {
-  const hoje = await obterDataAtiva();
+  const hoje = await obterDataEmUso();
 
   const { data, error } = await supabaseClient
     .from("refeicoes")
@@ -368,7 +375,7 @@ function irParaHistorico() {
 }
 
 async function inicializarRefeicoesPadrao() {
-  const hoje = await obterDataAtiva();
+  const hoje = await obterDataEmUso();
   const diaSemana = await obterDiaSemana();
 
   const { data, error } = await supabaseClient
@@ -435,7 +442,7 @@ async function inicializarRefeicoesPadrao() {
   }
 }
 async function calcularTotalDia() {
-  const hoje = await obterDataAtiva();
+  const hoje = await obterDataEmUso();
 
   const { data: refeicoes } = await supabaseClient
     .from("refeicoes")
@@ -484,7 +491,7 @@ async function encerrarDia() {
   const confirmar = confirm("Deseja encerrar o dia atual?");
   if (!confirmar) return;
 
-  const hoje = await obterDataAtiva();
+ const hoje = await obterDataAtiva();
 
   // 1️⃣ Marcar o dia atual como encerrado
   await supabaseClient
@@ -508,6 +515,30 @@ async function encerrarDia() {
 
   // 4️⃣ Recarregar sistema
   await inicializarRefeicoesPadrao();
+  await gerarRefeicoes();
+  await atualizarStatus();
+  await calcularTotalDia();
+}
+
+function alterarDia(direcao) {
+  if (!dataVisualizada) return;
+
+  const partes = dataVisualizada.split("-");
+  const dataObj = new Date(
+    Number(partes[0]),
+    Number(partes[1]) - 1,
+    Number(partes[2])
+  );
+
+  dataObj.setDate(dataObj.getDate() + direcao);
+
+  dataVisualizada = dataObj.toLocaleDateString("sv-SE");
+
+  atualizarTela();
+}
+
+async function atualizarTela() {
+  await atualizarTituloRefeicoes();
   await gerarRefeicoes();
   await atualizarStatus();
   await calcularTotalDia();
