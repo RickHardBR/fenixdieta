@@ -196,6 +196,7 @@ button:hover.btn-encerrar-dia {
 
 .navegacao_dias:hover {
   transform: scale(1.15);
+  background: none;
 }
 
 /* Botão voltar hoje */
@@ -273,8 +274,33 @@ button:hover.btn-encerrar-dia {
   color: #ccc;
 }
 
-.item-alimento {
-  margin-bottom: 6px;
+.item-alimento{
+  display:flex;
+  align-items:center;
+  width:98%;
+}
+
+.item-alimento span{
+  flex:1;
+}
+
+.btn-trocar{
+  width:22px;
+  height:22px;
+  padding:0;
+  margin-left:8px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  opacity:0.7;
+  filter: brightness(0.85);
+  transition:transform .15s ease, opacity .15s ease;
+}
+.btn-trocar:hover{
+  opacity:1;
+  transform:scale(1.15);
+  background: none;
+  filter: brightness(0.85);
 }
 
 .total-refeicao {
@@ -283,6 +309,25 @@ button:hover.btn-encerrar-dia {
   color: #4caf50;
 }
 
+.btn-equivalencia, .btn-trocar {
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  font-size: 16px;
+  margin-left: 4px;
+}
+
+.btn-equivalencia:hover, .btn-trocar:hover {
+  opacity: 1;
+  transform: scale(1.15);
+  background: none;
+}
+
+.btn-equivalencia {
+  font-size: 18px;
+}
 /* =========================
    WIDGET CALORIAS
 ========================= */
