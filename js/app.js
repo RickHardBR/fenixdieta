@@ -397,6 +397,24 @@ async function gerarRefeicoes() {
       };
       conteudoLinha.appendChild(botaoTrocar);
 
+      // Botão excluir item
+      const botaoExcluir = document.createElement("button");
+      botaoExcluir.className = "btn-excluir";
+      botaoExcluir.textContent = "🗑️";
+      botaoExcluir.style.cssText =
+        "width:24px; height:24px; padding:0; display:flex; align-items:center; justify-content:center; cursor:pointer;";
+      botaoExcluir.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        abrirModalConfirmacao(
+          `Excluir <strong>${alimento.nome}</strong> desta refeição?`,
+          async () => {
+            await excluirItemRefeicao(itemId);
+          }
+        );
+      };
+      conteudoLinha.appendChild(botaoExcluir);
+
       linha.appendChild(conteudoLinha);
       detalhes.appendChild(linha);
     });
@@ -1047,5 +1065,47 @@ document.addEventListener("DOMContentLoaded", function () {
 
   carregarCategorias();
 });
+
+// ============================================
+// EXCLUIR ITEM DE REFEIÇÃO
+// ============================================
+async function excluirItemRefeicao(itemId) {
+  const { error } = await supabaseClient
+    .from("refeicao_itens")
+    .delete()
+    .eq("id", itemId);
+
+  if (error) {
+    alert("Erro ao excluir item: " + error.message);
+    return;
+  }
+
+  await gerarRefeicoes();
+  await calcularTotalDia();
+  await atualizarStatus();
+}
+
+// ============================================
+// MODAL DE CONFIRMAÇÃO GENÉRICO
+// ============================================
+function abrirModalConfirmacao(mensagem, onConfirmar) {
+  document.getElementById("modalConfirmacaoTexto").innerHTML = mensagem;
+  document.getElementById("modalConfirmacao").style.display = "flex";
+
+  // Guardar callback no botão confirmar
+  const btnConfirmar = document.getElementById("btnConfirmarExclusao");
+  // Clonar para remover listeners antigos
+  const btnNovo = btnConfirmar.cloneNode(true);
+  btnConfirmar.parentNode.replaceChild(btnNovo, btnConfirmar);
+
+  btnNovo.onclick = async () => {
+    fecharModalConfirmacao();
+    await onConfirmar();
+  };
+}
+
+function fecharModalConfirmacao() {
+  document.getElementById("modalConfirmacao").style.display = "none";
+}
 
 window.onload = init;

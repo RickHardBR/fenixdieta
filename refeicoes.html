@@ -12,11 +12,26 @@
 
   <div class="container">
 
-    <h1>Projeto Fênix 54</h1>
+    <div class="titulo-app">
+      <h1>Projeto Fênix 54</h1>
+      <button onclick="toggleFullscreen()" id="btnFullscreen" class="btn-fullscreen" title="Tela cheia">⛶</button>
+    </div>
 
     <section class="card">
       <h2>Histórico de Refeições</h2>
-      <div id="historicoRefeicoes"></div>
+
+      <!-- Seletor de mês -->
+      <div class="navegacao-dia" style="margin-bottom: 12px;">
+        <button onclick="mesAnterior()" class="navegacao_dias">⬅️</button>
+        <span id="labelMes" style="font-weight:600; font-size:15px; text-align:center;"></span>
+        <button id="btnProximoMes" onclick="proximoMes()" class="navegacao_dias">➡️</button>
+      </div>
+
+      <!-- Área scrollável com altura adaptada à tela -->
+      <div class="historico-scroll">
+        <div id="historicoRefeicoes"></div>
+      </div>
+
       <button onclick="voltar()">Voltar</button>
     </section>
 
@@ -24,6 +39,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./js/supabase.js"></script>
+  <script src="./js/fullscreen.js"></script>
   <script src="./js/historico.js"></script>
 
 </body>

@@ -4,11 +4,25 @@
 const META_PESO = 95;
 const META_CALORIAS_HISTORICO = 1900;
 
+const MESES_BR = [
+  "Janeiro", "Fevereiro", "Março", "Abril",
+  "Maio", "Junho", "Julho", "Agosto",
+  "Setembro", "Outubro", "Novembro", "Dezembro"
+];
+
 // ============================================
-// UTILITÁRIO DE DATA — evita problemas de fuso horário
+// ESTADO DO SELETOR DE MÊS
+// ============================================
+const estadoMes = {
+  ano:     new Date().getFullYear(),
+  mes:     new Date().getMonth() + 1, // 1–12
+  diasMap: {},  // cache de todos os dias carregados do banco
+};
+
+// ============================================
+// UTILITÁRIO DE DATA
 // ============================================
 function formatarDataBR(dataStr) {
-  // dataStr no formato YYYY-MM-DD
   const [ano, mes, dia] = dataStr.split("-");
   return `${dia}/${mes}/${ano}`;
 }
@@ -28,6 +42,7 @@ async function carregarHistoricoCompleto() {
   }
 
   const container = document.getElementById("historicoCompleto");
+  if (!container) return;
   container.innerHTML = "";
 
   const datas = [];
@@ -35,16 +50,43 @@ async function carregarHistoricoCompleto() {
 
   data.forEach((registro, index) => {
     const dataFormatada = new Date(registro.created_at).toLocaleDateString("pt-BR");
-
     datas.push(dataFormatada);
     pesos.push(registro.peso);
 
     const linha = document.createElement("div");
     linha.className = `linha-historico ${index === data.length - 1 ? "peso-atual" : "peso-antigo"}`;
-    linha.innerHTML = `
-      <span>${dataFormatada}</span>
-      <span>${registro.peso.toFixed(2)} kg</span>
-    `;
+
+    const spanData  = document.createElement("span");
+    spanData.textContent = dataFormatada;
+
+    const spanPeso  = document.createElement("span");
+    spanPeso.textContent = `${registro.peso.toFixed(2)} kg`;
+
+    const btnExcluir = document.createElement("button");
+    btnExcluir.className = "btn-excluir-peso";
+    btnExcluir.textContent = "🗑️";
+    btnExcluir.title = "Excluir registro";
+    btnExcluir.onclick = () => {
+      abrirModalConfirmacaoHistorico(
+        `Excluir o registro de <strong>${registro.peso.toFixed(2)} kg</strong> do dia ${dataFormatada}?`,
+        async () => {
+          const { error } = await supabaseClient
+            .from("pesos")
+            .delete()
+            .eq("id", registro.id);
+
+          if (error) {
+            alert("Erro ao excluir: " + error.message);
+            return;
+          }
+          await carregarHistoricoCompleto();
+        }
+      );
+    };
+
+    linha.appendChild(spanData);
+    linha.appendChild(spanPeso);
+    linha.appendChild(btnExcluir);
     container.appendChild(linha);
   });
 
@@ -53,6 +95,7 @@ async function carregarHistoricoCompleto() {
 
 function criarGraficoPeso(datas, pesos) {
   const ctx = document.getElementById("graficoPeso");
+  if (!ctx) return;
   const metaLinha = new Array(datas.length).fill(META_PESO);
 
   new Chart(ctx, {
@@ -92,53 +135,38 @@ function criarGraficoPeso(datas, pesos) {
     },
   });
 
-  const primeiro = pesos[0];
-  const ultimo = pesos[pesos.length - 1];
+  const primeiro  = pesos[0];
+  const ultimo    = pesos[pesos.length - 1];
   const diferenca = (ultimo - primeiro).toFixed(1);
-  const resumo = document.getElementById("resumoPeso");
+  const resumo    = document.getElementById("resumoPeso");
+  if (!resumo) return;
 
   if (diferenca < 0) {
-    resumo.innerHTML = `↓ ${Math.abs(diferenca)} kg perdidos`;
+    resumo.innerHTML   = `↓ ${Math.abs(diferenca)} kg perdidos`;
     resumo.style.color = "#4caf50";
   } else if (diferenca > 0) {
-    resumo.innerHTML = `↑ ${diferenca} kg ganhos`;
+    resumo.innerHTML   = `↑ ${diferenca} kg ganhos`;
     resumo.style.color = "#ff5252";
   } else {
-    resumo.innerHTML = "Peso estável";
+    resumo.innerHTML   = "Peso estável";
     resumo.style.color = "#ffffff";
   }
 }
 
 // ============================================
-// HISTÓRICO DE REFEIÇÕES (CALORIAS POR DIA)
+// HISTÓRICO DE REFEIÇÕES — carrega tudo de uma vez e armazena em cache
 // ============================================
-async function carregarHistoricoRefeicoes() {
-  const container = document.getElementById("historicoRefeicoes");
-  if (!container) return;
-
-  container.innerHTML = "<div style='color:#aaa; text-align:center;'>Carregando...</div>";
-
-  // 1. Buscar todos os dias que têm refeições, ordenados do mais recente
-  const { data: refeicoes, error: erroRefeicoes } = await supabaseClient
+async function carregarTodosOsDias() {
+  const { data: refeicoes, error } = await supabaseClient
     .from("refeicoes")
     .select("id, data, concluida")
     .order("data", { ascending: false });
 
-  if (erroRefeicoes) {
-    console.error("Erro ao carregar refeições:", erroRefeicoes);
-    container.innerHTML = "<div style='color:#ff5252;'>Erro ao carregar histórico.</div>";
-    return;
-  }
+  if (error || !refeicoes || refeicoes.length === 0) return;
 
-  if (!refeicoes || refeicoes.length === 0) {
-    container.innerHTML = "<div style='color:#aaa;'>Nenhuma refeição encontrada.</div>";
-    return;
-  }
-
-  // 2. Buscar todos os itens dessas refeições de uma vez (evita N+1)
   const ids = refeicoes.map((r) => r.id);
 
-  const { data: itens, error: erroItens } = await supabaseClient
+  const { data: itens } = await supabaseClient
     .from("refeicao_itens")
     .select(`
       refeicao_id,
@@ -150,11 +178,7 @@ async function carregarHistoricoRefeicoes() {
     `)
     .in("refeicao_id", ids);
 
-  if (erroItens) {
-    console.error("Erro ao carregar itens:", erroItens);
-  }
-
-  // 3. Calcular calorias por refeição
+  // Calorias por refeição
   const caloriasPorRefeicao = {};
   (itens || []).forEach((item) => {
     const base = item.alimentos.tipo_medida === "gramas" ? 100 : 1;
@@ -162,39 +186,63 @@ async function carregarHistoricoRefeicoes() {
     caloriasPorRefeicao[item.refeicao_id] = (caloriasPorRefeicao[item.refeicao_id] || 0) + kcal;
   });
 
-  // 4. Agrupar por data — soma apenas refeições concluídas
-  const diasMap = {};
+  // Agrupar por data no cache
   refeicoes.forEach((ref) => {
-    if (!diasMap[ref.data]) {
-      diasMap[ref.data] = { totalKcal: 0, totalRefeicoes: 0, concluidasCount: 0 };
+    if (!estadoMes.diasMap[ref.data]) {
+      estadoMes.diasMap[ref.data] = { totalKcal: 0, totalRefeicoes: 0, concluidasCount: 0 };
     }
-    diasMap[ref.data].totalRefeicoes++;
+    estadoMes.diasMap[ref.data].totalRefeicoes++;
     if (ref.concluida) {
-      diasMap[ref.data].totalKcal += caloriasPorRefeicao[ref.id] || 0;
-      diasMap[ref.data].concluidasCount++;
+      estadoMes.diasMap[ref.data].totalKcal       += caloriasPorRefeicao[ref.id] || 0;
+      estadoMes.diasMap[ref.data].concluidasCount++;
     }
   });
+}
 
-  // 5. Ordenar datas do mais recente para o mais antigo
-  const diasOrdenados = Object.keys(diasMap).sort((a, b) => b.localeCompare(a));
+// ============================================
+// RENDERIZAR MÊS SELECIONADO
+// ============================================
+function renderizarMesAtual() {
+  // Atualizar label do navegador de mês
+  const label = document.getElementById("labelMes");
+  if (label) label.textContent = `${MESES_BR[estadoMes.mes - 1]} ${estadoMes.ano}`;
 
-  // 6. Montar interface
+  // Atualizar estado do botão "próximo mês" — desabilita se for o mês atual
+  const hoje = new Date();
+  const btnProximo = document.getElementById("btnProximoMes");
+  if (btnProximo) {
+    const ehMesAtual = estadoMes.ano === hoje.getFullYear() && estadoMes.mes === hoje.getMonth() + 1;
+    btnProximo.disabled = ehMesAtual;
+    btnProximo.style.opacity = ehMesAtual ? "0.3" : "1";
+  }
+
+  const container = document.getElementById("historicoRefeicoes");
+  if (!container) return;
   container.innerHTML = "";
 
-  diasOrdenados.forEach((data) => {
-    const { totalKcal, totalRefeicoes, concluidasCount } = diasMap[data];
+  // Filtrar dias do mês selecionado
+  const prefixo    = `${estadoMes.ano}-${String(estadoMes.mes).padStart(2, "0")}`;
+  const diasDoMes  = Object.keys(estadoMes.diasMap)
+    .filter((d) => d.startsWith(prefixo))
+    .sort((a, b) => b.localeCompare(a));
+
+  if (diasDoMes.length === 0) {
+    container.innerHTML = `<div class="historico-vazio">Nenhuma refeição registrada em ${MESES_BR[estadoMes.mes - 1]}.</div>`;
+    return;
+  }
+
+  diasDoMes.forEach((data) => {
+    const { totalKcal, totalRefeicoes, concluidasCount } = estadoMes.diasMap[data];
     const kcalFormatado = Math.round(totalKcal);
-    const porcentagem = Math.min(totalKcal / META_CALORIAS_HISTORICO, 1);
+    const porcentagem   = Math.min(totalKcal / META_CALORIAS_HISTORICO, 1);
     const dataFormatada = formatarDataBR(data);
 
-    // Cor da barra conforme proximidade da meta
-    let corBarra = "#4caf50"; // verde — dentro da meta
-    if (porcentagem > 1.05) corBarra = "#ff5252"; // vermelho — acima da meta
-    else if (porcentagem > 0.95) corBarra = "#ff9800"; // laranja — próximo
+    let corBarra = "#4caf50";
+    if (porcentagem > 1.05)      corBarra = "#ff5252";
+    else if (porcentagem > 0.95) corBarra = "#ff9800";
 
     const linha = document.createElement("div");
     linha.className = "card-dia-refeicao";
-
     linha.innerHTML = `
       <div class="card-dia-topo">
         <span class="card-dia-data">${dataFormatada}</span>
@@ -208,13 +256,56 @@ async function carregarHistoricoRefeicoes() {
         <span>Meta: ${META_CALORIAS_HISTORICO} kcal</span>
       </div>
     `;
-
     container.appendChild(linha);
   });
 }
 
 // ============================================
-// NAVEGAÇÃO
+// NAVEGAÇÃO DO SELETOR DE MÊS
+// ============================================
+function mesAnterior() {
+  estadoMes.mes--;
+  if (estadoMes.mes < 1) {
+    estadoMes.mes = 12;
+    estadoMes.ano--;
+  }
+  renderizarMesAtual();
+}
+
+function proximoMes() {
+  const hoje = new Date();
+  if (estadoMes.ano === hoje.getFullYear() && estadoMes.mes === hoje.getMonth() + 1) return;
+  estadoMes.mes++;
+  if (estadoMes.mes > 12) {
+    estadoMes.mes = 1;
+    estadoMes.ano++;
+  }
+  renderizarMesAtual();
+}
+
+// ============================================
+// MODAL DE CONFIRMAÇÃO — HISTÓRICO DE PESO
+// ============================================
+function abrirModalConfirmacaoHistorico(mensagem, onConfirmar) {
+  document.getElementById("modalConfirmacaoTexto").innerHTML = mensagem;
+  document.getElementById("modalConfirmacao").style.display = "flex";
+
+  const btnConfirmar = document.getElementById("btnConfirmarExclusao");
+  const btnNovo = btnConfirmar.cloneNode(true);
+  btnConfirmar.parentNode.replaceChild(btnNovo, btnConfirmar);
+
+  btnNovo.onclick = async () => {
+    fecharModalConfirmacao();
+    await onConfirmar();
+  };
+}
+
+function fecharModalConfirmacao() {
+  document.getElementById("modalConfirmacao").style.display = "none";
+}
+
+// ============================================
+// NAVEGAÇÃO DE PÁGINA
 // ============================================
 function voltar() {
   window.location.href = "index.html";
@@ -223,7 +314,15 @@ function voltar() {
 // ============================================
 // INICIALIZAÇÃO
 // ============================================
+async function iniciarHistoricoRefeicoes() {
+  const container = document.getElementById("historicoRefeicoes");
+  if (!container) return;
+  container.innerHTML = `<div style="color:#aaa; text-align:center; padding:20px;">Carregando...</div>`;
+  await carregarTodosOsDias();
+  renderizarMesAtual();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   carregarHistoricoCompleto();
-  carregarHistoricoRefeicoes();
+  iniciarHistoricoRefeicoes();
 });
