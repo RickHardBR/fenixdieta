@@ -64,6 +64,31 @@
     </section>
 
   </div>
+  <!-- Modal de Substituição de Alimentos -->
+<div id="modalSubstituicao" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Substituir Alimento</h3>
+      <span class="modal-close">&times;</span>
+    </div>
+    <div class="modal-body">
+      <p>Substituindo: <span id="alimentoOriginal"></span></p>
+      <p>Calorias a manter: <span id="caloriasAlvo"></span> kcal</p>
+      
+      <label for="filtroCategoria">Filtrar por categoria:</label>
+      <select id="filtroCategoria">
+        <option value="todas">Todas as categorias</option>
+      </select>
+      
+      <div id="listaAlimentosSubstituicao" class="lista-alimentos">
+        <!-- Alimentos serão carregados aqui -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button id="btnCancelarSubstituicao">Cancelar</button>
+    </div>
+  </div>
+</div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./js/supabase.js"></script>
   <script src="./js/planosemanal.js"></script>

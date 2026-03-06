@@ -26,27 +26,6 @@ const PESO_POR_UNIDADE = {
 };
 
 // ============================================
-// UTILITÁRIOS DE DATA — evita problemas de fuso horário
-// Nunca use new Date().toLocaleDateString("sv-SE") pois em fusos
-// negativos (Brasil UTC-3) pode retornar o dia anterior.
-// Sempre construímos a string YYYY-MM-DD a partir dos componentes locais.
-// ============================================
-function dataHojeLocal() {
-  const d = new Date();
-  const ano = d.getFullYear();
-  const mes = String(d.getMonth() + 1).padStart(2, "0");
-  const dia = String(d.getDate()).padStart(2, "0");
-  return `${ano}-${mes}-${dia}`;
-}
-
-function proximoDiaLocal(dataStr) {
-  const [ano, mes, dia] = dataStr.split("-").map(Number);
-  const d = new Date(ano, mes - 1, dia);
-  d.setDate(d.getDate() + 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-// ============================================
 // ESTADO DA APLICAÇÃO
 // ============================================
 // Toda a mutação de estado passa por este objeto,
@@ -96,7 +75,7 @@ async function obterDataAtiva() {
   }
 
   if (!data) {
-    const hoje = dataHojeLocal();
+    const hoje = new Date().toLocaleDateString("sv-SE");
 
     const { data: novoRegistro, error: insertError } = await supabaseClient
       .from("controle_dieta")
@@ -846,7 +825,6 @@ function irParaHistoricoRefeicoes() {
   window.location.href = "refeicoes.html";
 }
 
-
 async function encerrarDia() {
   const confirmar = confirm("Deseja encerrar o dia atual?");
   if (!confirmar) return;
@@ -868,8 +846,10 @@ async function encerrarDia() {
     return;
   }
 
-  // Calcular próximo dia sem risco de fuso horário
-  const proximoDia = proximoDiaLocal(hoje);
+  // Calcular próximo dia com horário fixo para evitar problemas de fuso
+  const dataObj = new Date(hoje + "T12:00:00");
+  dataObj.setDate(dataObj.getDate() + 1);
+  const proximoDia = dataObj.toLocaleDateString("sv-SE");
 
   const { error: insertError } = await supabaseClient
     .from("controle_dieta")
@@ -901,7 +881,8 @@ async function alterarDia(direcao) {
     const [ano, mes, dia] = estado.dataVisualizada.split("-").map(Number);
     const dataObj = new Date(ano, mes - 1, dia);
     dataObj.setDate(dataObj.getDate() + direcao);
-    const novaData = `${dataObj.getFullYear()}-${String(dataObj.getMonth() + 1).padStart(2, "0")}-${String(dataObj.getDate()).padStart(2, "0")}`;
+
+    const novaData = dataObj.toLocaleDateString("sv-SE");
     estado.dataVisualizada = novaData;
 
     await garantirPlanoDoDia(novaData);
