@@ -31,9 +31,18 @@ function formatarDataBR(dataStr) {
 // HISTÓRICO DE PESO
 // ============================================
 async function carregarHistoricoCompleto() {
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  if (!user) {
+    console.error("Usuário não autenticado.");
+    return;
+  }
+
   const { data, error } = await supabaseClient
     .from("pesos")
     .select("*")
+    .eq("user_id", user.id)
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -96,6 +105,13 @@ async function carregarHistoricoCompleto() {
 function criarGraficoPeso(datas, pesos) {
   const ctx = document.getElementById("graficoPeso");
   if (!ctx) return;
+
+  // 🔧 destruir gráfico anterior se existir
+  const graficoExistente = Chart.getChart(ctx);
+  if (graficoExistente) {
+    graficoExistente.destroy();
+  }
+
   const metaLinha = new Array(datas.length).fill(META_PESO);
 
   new Chart(ctx, {
@@ -157,9 +173,13 @@ function criarGraficoPeso(datas, pesos) {
 // HISTÓRICO DE REFEIÇÕES — carrega tudo de uma vez e armazena em cache
 // ============================================
 async function carregarTodosOsDias() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
   const { data: refeicoes, error } = await supabaseClient
     .from("refeicoes")
     .select("id, data, concluida")
+    .eq("user_id", user.id)
     .order("data", { ascending: false });
 
   if (error || !refeicoes || refeicoes.length === 0) return;

@@ -1,6 +1,14 @@
-// ============================================
-// CONSTANTES
-// ============================================
+async function verificarLogin() {
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  if (!session) {
+    window.location.href = "login.html";
+    return;
+  }
+
+}
+
 const META_CALORIAS = 1900;
 
 const REFEICOES_PADRAO = [
@@ -13,8 +21,6 @@ const REFEICOES_PADRAO = [
 
 const ORDEM_REFEICOES = ["cafe", "almoco", "lanche", "jantar", "pos"];
 
-// Mapeamento de peso por unidade para alimentos medidos em gramas
-// Centralizado aqui para facilitar manutenção
 const PESO_POR_UNIDADE = {
   "Banana":       100,
   "Mamão":        300,
@@ -25,12 +31,6 @@ const PESO_POR_UNIDADE = {
   "Clara de ovo":  35,
 };
 
-// ============================================
-// UTILITÁRIOS DE DATA — evita problemas de fuso horário
-// Nunca use new Date().toLocaleDateString("sv-SE") pois em fusos
-// negativos (Brasil UTC-3) pode retornar o dia anterior.
-// Sempre construímos a string YYYY-MM-DD a partir dos componentes locais.
-// ============================================
 function dataHojeLocal() {
   const d = new Date();
   const ano = d.getFullYear();
@@ -49,15 +49,16 @@ function proximoDiaLocal(dataStr) {
 // ============================================
 // ESTADO DA APLICAÇÃO
 // ============================================
-// Toda a mutação de estado passa por este objeto,
-// evitando variáveis globais soltas.
 const estado = {
+  usuario: null,
+
   dataVisualizada:       null,
   navegando:             false,
+
   substituicao: {
     emAndamento:         false,
-    itemId:              null,   // ID do refeicao_itens a ser substituído
-    refeicaoId:          null,   // ID da refeição dona do item
+    itemId:              null,
+    refeicaoId:          null,
     caloriasOriginal:    0,
     alimentoOriginalObj: null,
   },
@@ -67,6 +68,18 @@ const estado = {
 // INICIALIZAÇÃO
 // ============================================
 async function init() {
+
+  await verificarLogin();
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  estado.usuario = user;
+
+  if (!estado.usuario) {
+    window.location.href = "login.html";
+    return;
+  }
+
   estado.dataVisualizada = await obterDataAtiva();
 
   await atualizarTituloRefeicoes();
@@ -82,9 +95,10 @@ async function init() {
 // DATA ATIVA
 // ============================================
 async function obterDataAtiva() {
-  const { data, error } = await supabaseClient
+  let { data, error } = await supabaseClient
     .from("controle_dieta")
     .select("*")
+    .eq("user_id", estado.usuario.id)
     .eq("encerrado", false)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -95,12 +109,50 @@ async function obterDataAtiva() {
     return null;
   }
 
+  const hoje = dataHojeLocal();
+
+  // Registro ativo encontrado mas é de um dia passado?
+  // Isso acontece se o usuário não encerrou o dia manualmente.
+  // Nesse caso: encerra o dia antigo automaticamente e avança para hoje.
+  if (data && data.data_ativa < hoje) {
+    console.warn(`Dia ativo desatualizado (${data.data_ativa}), avançando para hoje (${hoje}).`);
+
+    // Encerra o dia atrasado
+    await supabaseClient
+      .from("controle_dieta")
+      .update({ encerrado: true })
+      .eq("id", data.id);
+
+    // Zera o "data" para cair no bloco de criação abaixo
+    data = null;
+  }
+
   if (!data) {
-    const hoje = dataHojeLocal();
+    // Verificar se já existe um registro para hoje (evita duplicata)
+    const { data: jaExiste } = await supabaseClient
+      .from("controle_dieta")
+      .select("data_ativa")
+      .eq("user_id", estado.usuario.id)
+      .eq("data_ativa", hoje)
+      .maybeSingle();
+
+    if (jaExiste) {
+      // Já existe mas estava encerrado — reabre
+      await supabaseClient
+        .from("controle_dieta")
+        .update({ encerrado: false })
+        .eq("user_id", estado.usuario.id)
+        .eq("data_ativa", hoje);
+      return hoje;
+    }
 
     const { data: novoRegistro, error: insertError } = await supabaseClient
       .from("controle_dieta")
-      .insert({ data_ativa: hoje, encerrado: false })
+      .insert({
+        data_ativa: hoje,
+        encerrado: false,
+        user_id: estado.usuario.id
+      })
       .select()
       .single();
 
@@ -159,22 +211,38 @@ async function salvarPeso() {
     return;
   }
 
+  // 🔒 proteção de usuário
+  if (!estado.usuario) {
+    alert("Usuário não autenticado.");
+    return;
+  }
+
   const { error } = await supabaseClient
     .from("pesos")
-    .insert([{ peso: parseFloat(peso) }]);
+    .insert([{
+      peso: parseFloat(peso),
+      user_id: estado.usuario.id
+    }]);
 
   if (error) {
     console.error("Erro ao salvar peso:", error);
     alert("Erro ao salvar no banco.");
   } else {
     alert("Peso salvo no banco!");
+
+    await carregarUltimoPeso();
+await carregarHistoricoPeso();
   }
 }
 
 async function carregarUltimoPeso() {
+
+  if (!estado.usuario) return;
+
   const { data, error } = await supabaseClient
     .from("pesos")
     .select("*")
+    .eq("user_id", estado.usuario.id)
     .order("created_at", { ascending: false })
     .limit(1);
 
@@ -189,9 +257,13 @@ async function carregarUltimoPeso() {
 }
 
 async function carregarHistoricoPeso() {
+
+  if (!estado.usuario) return;
+
   const { data, error } = await supabaseClient
     .from("pesos")
     .select("*")
+    .eq("user_id", estado.usuario.id)
     .order("created_at", { ascending: false })
     .limit(2);
 
@@ -210,9 +282,11 @@ async function carregarHistoricoPeso() {
 
   (data || []).forEach((registro, index) => {
     const dataFormatada = new Date(registro.created_at).toLocaleDateString("pt-BR");
+
     const linha = document.createElement("div");
     linha.className = `linha-historico ${index === 0 ? "peso-atual" : "peso-antigo"}`;
     linha.innerHTML = `<span>${dataFormatada}</span><span>${registro.peso.toFixed(2)} kg</span>`;
+
     container.appendChild(linha);
   });
 }
@@ -221,7 +295,6 @@ async function carregarHistoricoPeso() {
 // REFEIÇÕES — GERAÇÃO DE INTERFACE
 // ============================================
 async function gerarRefeicoes() {
-  await supabaseClient.auth.refreshSession();
 
   const container = document.getElementById("refeicoes");
   container.innerHTML = "";
@@ -229,10 +302,11 @@ async function gerarRefeicoes() {
   const hoje = await obterDataEmUso();
 
   // 1. Buscar refeições do dia
-  const { data: refeicoes, error } = await supabaseClient
-    .from("refeicoes")
-    .select("*")
-    .eq("data", hoje);
+const { data: refeicoes, error } = await supabaseClient
+  .from("refeicoes")
+  .select("*")
+  .eq("data", hoje)
+  .eq("user_id", estado.usuario.id);
 
   if (error) {
     console.error("Erro ao carregar refeições:", error);
@@ -320,7 +394,8 @@ async function gerarRefeicoes() {
       await supabaseClient
         .from("refeicoes")
         .update({ concluida: checkbox.checked })
-        .eq("id", refeicao.id);
+        .eq("id", refeicao.id)
+        .eq("user_id", estado.usuario.id);
       await atualizarStatus();
       await calcularTotalDia();
     };
@@ -468,7 +543,8 @@ async function atualizarStatus() {
   const { data, error } = await supabaseClient
     .from("refeicoes")
     .select("concluida")
-    .eq("data", hoje);
+    .eq("data", hoje)
+    .eq("user_id", estado.usuario.id);
 
   if (error) {
     console.error("Erro ao buscar status:", error);
@@ -490,7 +566,8 @@ async function calcularTotalDia() {
   const { data: refeicoes } = await supabaseClient
     .from("refeicoes")
     .select("id, concluida")
-    .eq("data", hoje);
+    .eq("data", hoje)
+    .eq("user_id", estado.usuario.id);
 
   const idsConcluidas = (refeicoes || []).filter((r) => r.concluida).map((r) => r.id);
 
@@ -544,7 +621,8 @@ async function inicializarRefeicoesPadrao() {
   const { data, error } = await supabaseClient
     .from("refeicoes")
     .select("id")
-    .eq("data", hoje);
+    .eq("data", hoje)
+    .eq("user_id", estado.usuario.id);
 
   if (error) {
     console.error("Erro ao verificar refeições do dia:", error);
@@ -559,6 +637,7 @@ async function inicializarRefeicoesPadrao() {
     tipo_refeicao: item.key,
     concluida:     false,
     data:          hoje,
+    user_id: estado.usuario.id
   }));
 
   const { data: refeicoesCriadas, error: erroInsert } = await supabaseClient
@@ -623,11 +702,6 @@ async function inicializarRefeicoesPadrao() {
 // ============================================
 // SUBSTITUIÇÃO DE ALIMENTOS
 // ============================================
-
-/**
- * Abre o modal de substituição para o item indicado.
- * Funciona para qualquer alimento em qualquer refeição.
- */
 async function iniciarSubstituicao(itemId) {
   try {
     if (!itemId) return;
@@ -647,6 +721,7 @@ async function iniciarSubstituicao(itemId) {
         )
       `)
       .eq("id", itemId)
+      .limit(1)
       .maybeSingle();
 
     if (error || !item) {
@@ -719,15 +794,6 @@ async function carregarAlimentosParaSubstituicao(categoria = "todas") {
   }
 }
 
-/**
- * Confirma a substituição usando o ID exato salvo em estado.substituicao.
- * Funciona para qualquer item em qualquer refeição — sem hardcode de alimento ou refeição.
- *
- * IMPORTANTE — RLS (Row Level Security):
- * O Supabase com RLS ativo não retorna erro quando um DELETE é bloqueado pela policy;
- * ele simplesmente não apaga nada e retorna sucesso. Por isso usamos .select() após
- * o delete para confirmar que o registro realmente sumiu antes de fazer o insert.
- */
 async function confirmarSubstituicao(novoAlimentoId, novaQuantidade) {
   const sub = estado.substituicao;
 
@@ -825,7 +891,8 @@ async function diaTemPersonalizacoes(data) {
   const { data: refeicoes } = await supabaseClient
     .from("refeicoes")
     .select("id")
-    .eq("data", data);
+    .eq("data", data)
+    .eq("user_id", estado.usuario.id);
 
   if (!refeicoes || refeicoes.length === 0) return false;
 
@@ -878,7 +945,8 @@ async function encerrarDia() {
   const { error: updateError } = await supabaseClient
     .from("controle_dieta")
     .update({ encerrado: true })
-    .eq("data_ativa", hoje);
+    .eq("data_ativa", hoje)
+    .eq("user_id", estado.usuario.id);
 
   if (updateError) {
     console.error("Erro ao encerrar dia:", updateError);
@@ -891,7 +959,7 @@ async function encerrarDia() {
 
   const { error: insertError } = await supabaseClient
     .from("controle_dieta")
-    .insert({ data_ativa: proximoDia, encerrado: false });
+    .insert({ data_ativa: proximoDia, encerrado: false, user_id: estado.usuario.id });
 
   if (insertError) {
     console.error("Erro ao criar novo dia:", insertError);
@@ -947,10 +1015,11 @@ async function garantirPlanoDoDia(data) {
   const personalizado = await diaTemPersonalizacoes(data);
   if (personalizado) return;
 
-  const { data: refeicoes } = await supabaseClient
-    .from("refeicoes")
-    .select("id")
-    .eq("data", data);
+const { data: refeicoes } = await supabaseClient
+  .from("refeicoes")
+  .select("id")
+  .eq("data", data)
+  .eq("user_id", estado.usuario.id);
 
   if (refeicoes && refeicoes.length >= REFEICOES_PADRAO.length) return;
 
@@ -962,6 +1031,7 @@ async function garantirPlanoDoDia(data) {
     tipo_refeicao: item.key,
     concluida:     false,
     data:          data,
+    user_id: estado.usuario.id
   }));
 
   const { data: refeicoesCriadas } = await supabaseClient

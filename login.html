@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="./img/favicon.ico" type="image/x-icon">
+  <title>Fênix 54</title>
+
+<link rel="stylesheet" href="./style/login.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- TELA 1 -->
+<div class="card welcome" id="welcome">
+
+<div class="logo">
+  <img src="./img/fenix.png" alt="Logo Fênix 54">
+</div>
+
+<p>Transforme sua saúde todos os dias.</p>
+
+<button onclick="mostrarLogin()">Começar</button>
+
+</div>
+
+
+<!-- TELA 2 -->
+<div class="card login hidden" id="login">
+
+<h2>Entrar</h2>
+
+<input id="email" type="email" placeholder="E-mail">
+
+<div class="campo-senha">
+
+<input id="senha" type="password" placeholder="Senha">
+
+<button type="button" onclick="toggleSenha()" class="btn-senha" title="Mostrar ou ocultar senha">
+
+<svg id="icone-olho" width="26" height="26" viewBox="0 0 24 24" fill="#333">
+
+<!-- OLHO FECHADO -->
+
+<path d="M3 13c3-4 15-4 18 0" stroke="#333" stroke-width="2" fill="none"/>
+<path d="M7 15l-1 2" stroke="#333" stroke-width="2"/>
+<path d="M12 15v2" stroke="#333" stroke-width="2"/>
+<path d="M17 15l1 2" stroke="#333" stroke-width="2"/>
+
+</svg>
+
+</button>
+
+</div>
+
+<button onclick="login()">Entrar</button>
+
+<button class="secondary" onclick="abrirCadastro()">Criar conta</button>
+
+<p id="mensagem"></p>
+
+</div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="./js/supabase.js"></script>
+<script src="./js/login.js"></script>
+
+</body>
+</html>
